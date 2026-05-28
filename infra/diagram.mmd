@@ -1,0 +1,52 @@
+erDiagram
+    ESTABLISHMENTS ||--o{ ACCESS_CODES : generates
+    ESTABLISHMENTS ||--o{ PRODUCTS : owns
+    ESTABLISHMENTS ||--o{ ORDERS : manages
+    ACCESS_CODES ||--o{ ORDERS : registers
+    ORDERS ||--|{ ORDER_ITEMS : contains
+    PRODUCTS ||--o{ ORDER_ITEMS : included_in
+
+    ESTABLISHMENTS {
+        uuid id PK
+        string name
+        string email UK
+        string sso_provider
+        string sso_id UK
+    }
+
+    ACCESS_CODES {
+        uuid id PK
+        uuid establishment_id FK
+        string code UK
+        string role
+        string label
+        boolean is_active
+    }
+
+    PRODUCTS {
+        uuid id PK
+        uuid establishment_id FK
+        string name
+        decimal price
+        string image_base64
+        string description
+        boolean is_available
+    }
+
+    ORDERS {
+        uuid id PK
+        uuid establishment_id FK
+        uuid access_code_id FK
+        string table_number
+        string status
+        text notes
+    }
+
+    ORDER_ITEMS {
+        uuid id PK
+        uuid order_id FK
+        uuid product_id FK
+        integer quantity
+        decimal unit_price
+        text notes
+    }

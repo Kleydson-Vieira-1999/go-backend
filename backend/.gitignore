@@ -1,0 +1,6 @@
+.env
+.db
+client_secret_apps.googleusercontent.com.json
+*.key
+*.key.pub
+.vscode

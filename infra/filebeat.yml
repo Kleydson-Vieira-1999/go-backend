@@ -1,0 +1,41 @@
+filebeat.inputs:
+  # - type: filestream
+  - type: container
+    id: podman-backend-logs
+    enabled: true
+    # O input 'container' do Filebeat pode descobrir automaticamente os logs dos containers
+    # usando o socket do Podman (mapeado como /var/run/docker.sock).
+    # Os 'paths' abaixo são dicas de onde encontrar os arquivos de log no host.
+    # Para o driver de log 'json-file' do Podman, os logs geralmente estão em 'json.log'.
+    paths:
+      - '/home/doctor/.local/share/containers/storage/overlay-containers/*/userdata/log/*.log' # Caminho comum para logs json-file no Podman
+      - '/var/lib/containers/storage/overlay-containers/*/userdata/ctr.log'  # Manter para outros logs, se houver, ou remover se apenas logs json-file forem relevantes
+    
+
+    # parsers:
+    #   - ndjson:
+    #       target: "json"
+    #       overwrite_keys: true
+    # O input 'container' do Filebeat já adiciona metadados do container.
+    # Se o driver de log do container for 'json-file', ele encapsula o log da aplicação em um campo 'log'.
+    # A aplicação backend também gera JSON, então o JSON da aplicação estará dentro do campo 'message'
+    # (que é o conteúdo do campo 'log' do driver) após o processamento inicial do Filebeat.
+    processors:
+      - decode_json_fields:
+          fields: ["message"] # Decodifica a string JSON do campo 'message'
+          target: "json"      # Coloca os campos JSON decodificados no nível raiz do evento
+          overwrite_keys: true # Sobrescreve campos existentes se houver conflitos
+          max_depth: 10
+          add_error: true
+      - add_fields:
+          target: ""
+          fields:
+            service.name: "backend-prod" # Adiciona um campo personalizado para fácil identificação
+
+output.elasticsearch:
+  hosts: ["http://elasticsearch:9200"]
+  index: "backend-logs-%{+yyyy.MM.dd}"
+
+setup.ilm.enabled: false
+setup.template.name: "backend"
+setup.template.pattern: "backend-logs-*"
