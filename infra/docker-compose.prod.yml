@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # Banco de Dados que você já usa
@@ -21,21 +21,21 @@ services:
       timeout: 3s
       retries: 3
 
-  # pgadmin:
-  #   image: docker.io/dpage/pgadmin4:latest
-  #   environment:
-  #     PGADMIN_DEFAULT_EMAIL: admin@teste.com       # Seu login no pgAdmin
-  #     PGADMIN_DEFAULT_PASSWORD: admin_password     # Sua senha no pgAdmin
-  #     PGADMIN_LISTEN_PORT: 80
-  #   ports:
-  #     - "8081:80"                                  # Acesse no navegador via localhost:8080
-  #   volumes:
-  #     - pgadmin_data:/var/lib/pgadmin:Z            # Persiste as configurações do pgAdmin
-  #   user: "5050:5050"                              # Evita erro de permissão (ID padrão do pgAdmin)
-  #   networks:
-  #     - restaurante_net
-  #   depends_on:
-  #     - postgres
+  pgadmin:
+    image: docker.io/dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@teste.com # Seu login no pgAdmin
+      PGADMIN_DEFAULT_PASSWORD: admin_password # Sua senha no pgAdmin
+      PGADMIN_LISTEN_PORT: 80
+    ports:
+      - "8081:80" # Acesse no navegador via localhost:8080
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin:Z # Persiste as configurações do pgAdmin
+    user: "5050:5050" # Evita erro de permissão (ID padrão do pgAdmin)
+    networks:
+      - restaurante_net
+    depends_on:
+      - postgres
 
   # Motor de Busca e Armazenamento de Logs
   elasticsearch:
@@ -63,7 +63,7 @@ services:
     user: root # Necessário para ler os logs do Docker no host
     volumes:
       - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
-      - /var/lib/containers/storage:/var/lib/containers/storage:ro
+      - /home/doctor/.local/share/containers/storage:/var/log/podman:ro
       # Mapeia o socket do docker para coletar metadados (como o nome do container)
       - /nix/store/1y9yqcgynsi97sb17was2rfw53048nf7-podman-5.8.2/lib/systemd/system/podman.socket:/var/run/docker.sock:ro
     environment:
@@ -82,13 +82,13 @@ services:
   #     RABBITMQ_DEFAULT_PASS: guest
   #   volumes:
   #     - rabbitdata:/var/lib/rabbitmq:Z
-      
+
   backend-prod:
     build:
       context: ../backend
       dockerfile: Dockerfile.prod # Dockerfile focado em produção (multistage)
     ports:
-     - "8080:8080"
+      - "8080:8080"
     environment:
       - DB_HOST=postgres
       - DB_PORT=5432
@@ -104,7 +104,7 @@ services:
     logging:
       driver: "json-file" # garante o formato json padrão do docker
       options:
-        max-size: "10m"   # evita que o disco lote
+        max-size: "10m" # evita que o disco lote
         max-file: "3"
 
   # frontend-prod:

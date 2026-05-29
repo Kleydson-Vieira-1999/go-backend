@@ -1,6 +1,6 @@
 filebeat.inputs:
-  # - type: filestream
-  - type: container
+  - type: filestream
+    # - type: container
     id: podman-backend-logs
     enabled: true
     # O input 'container' do Filebeat pode descobrir automaticamente os logs dos containers
@@ -8,29 +8,35 @@ filebeat.inputs:
     # Os 'paths' abaixo são dicas de onde encontrar os arquivos de log no host.
     # Para o driver de log 'json-file' do Podman, os logs geralmente estão em 'json.log'.
     paths:
-      - '/home/doctor/.local/share/containers/storage/overlay-containers/*/userdata/log/*.log' # Caminho comum para logs json-file no Podman
-      - '/var/lib/containers/storage/overlay-containers/*/userdata/ctr.log'  # Manter para outros logs, se houver, ou remover se apenas logs json-file forem relevantes
-    
+      # - '/home/doctor/.local/share/containers/storage/overlay-containers/*/userdata/log/*.log' # Caminho comum para logs json-file no Podman
+      - "/var/log/podman/overlay-containers/*/userdata/ctr.log" # Manter para outros logs, se houver, ou remover se apenas logs json-file forem relevantes
 
-    # parsers:
-    #   - ndjson:
-    #       target: "json"
-    #       overwrite_keys: true
+    parsers:
+      - ndjson:
+          target: "json"
+          overwrite_keys: true
+
     # O input 'container' do Filebeat já adiciona metadados do container.
     # Se o driver de log do container for 'json-file', ele encapsula o log da aplicação em um campo 'log'.
     # A aplicação backend também gera JSON, então o JSON da aplicação estará dentro do campo 'message'
     # (que é o conteúdo do campo 'log' do driver) após o processamento inicial do Filebeat.
     processors:
+      - drop_event:
+          when:
+            not:
+              regexp:
+                log.file.path: ".*6800d16ed48f*."
+      # 2. O Dissect vai fatiar a string do Podman baseada nos espaços
+      - dissect:
+          tokenizer: "%{podman_timestamp} %{stream} %{log_flavor} %{json_payload}"
+          field: "message"
+          target_prefix: "podman"
+
+      # 3. Agora que isolamos o JSON dentro de 'podman.json_payload', fazemos o decode dele
       - decode_json_fields:
-          fields: ["message"] # Decodifica a string JSON do campo 'message'
-          target: "json"      # Coloca os campos JSON decodificados no nível raiz do evento
-          overwrite_keys: true # Sobrescreve campos existentes se houver conflitos
-          max_depth: 10
-          add_error: true
-      - add_fields:
-          target: ""
-          fields:
-            service.name: "backend-prod" # Adiciona um campo personalizado para fácil identificação
+          fields: ["podman.json_payload"]
+          target: "json"
+          overwrite_keys: true
 
 output.elasticsearch:
   hosts: ["http://elasticsearch:9200"]

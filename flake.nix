@@ -51,6 +51,8 @@
             echo "📊 Verifique os logs no Kibana em http://localhost:5601"
             echo "🍔 Acesse a aplicação simulada em http://localhost:3000"
           }
+
+          alias stop-saas='podman-compose -f docker-compose.prod.yml down -v'
         '';
       };
     };
