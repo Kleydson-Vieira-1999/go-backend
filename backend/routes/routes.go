@@ -2,6 +2,7 @@ package routes
 
 import (
 	"os"
+	"log/slog"
 	"time"
 
 	"github.com/Kleydson-Vieira-1999/resturant-orders-backend/handlers"
@@ -14,9 +15,11 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+
+	sloggin "github.com/samber/slog-gin"
 )
 
-func Setup(db *gorm.DB) *gin.Engine {
+func Setup(db *gorm.DB, loggerJson *slog.Logger) *gin.Engine {
 	broker := services.NewBroker()
 	go broker.Start()
 
@@ -26,7 +29,7 @@ func Setup(db *gorm.DB) *gin.Engine {
 
 	r := gin.New()
 
-	r.Use(gin.Logger())
+	r.Use(sloggin.New(loggerJson))
 	r.Use(gin.Recovery())
 
 	r.Use(cors.New(cors.Config{

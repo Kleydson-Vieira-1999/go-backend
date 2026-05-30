@@ -57,7 +57,7 @@ func main() {
 	sqlDB, _ := db.DB()
 	defer sqlDB.Close()
 
-	router := routes.Setup(db)
+	router := routes.Setup(db, loggerJson)
 
 	slog.Info("Servidor iniciado em http://localhost:8080")
 	router.Run(":8080")

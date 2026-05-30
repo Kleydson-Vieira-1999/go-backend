@@ -1,21 +1,9 @@
 'use client'
 
 import { backendApi } from "@/services/axios"
+import { Menu, MultiMenuResp } from "@/types/menu"
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from "react"
-
-interface Menu {
-  id: string;
-  store_id: string;
-  name: string;
-  is_active: boolean;
-  updated_at: string;
-}
-
-interface MultiMenuResp {
-  menus?: Menu[]
-  error?: string
-}
 
 export default function MenusAdminPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)

@@ -18,7 +18,6 @@ export default function CallbackPage() {
     const handleCallback = async () => {
       const params = Object.fromEntries(searchParams.entries())
       
-      console.log('executando ', provider)
       if (Object.keys(params).length > 0 && provider) {
         const response = await backendApi.post(`/api/${provider}/auth/token`, params)
         const { token, data } = response.data

@@ -1,26 +1,9 @@
 'use client';
 
 import { backendApi } from '@/services/axios';
+import { SingleStoreResp } from '@/types/store';
 import { useRouter, useParams } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
-
-interface Store {
-  id: string;
-  user_id: string;
-  store_template_id: string;
-  name: string;
-  picture: string;
-  type: string;
-  description: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-};
-
-interface SingleStoreResp {
-  store?: Store;
-  error?: string;
-};
 
 export default function StoreControlPage() {
   const router = useRouter();
