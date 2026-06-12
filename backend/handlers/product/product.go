@@ -1,6 +1,7 @@
 package product
 
 import (
+	"log/slog"
 	"net/http"
 
 	productModel "github.com/Kleydson-Vieira-1999/resturant-orders-backend/models/product"
@@ -17,12 +18,31 @@ func NewProductHandler(db *gorm.DB) *ProductHandler {
 	return &ProductHandler{DB: db}
 }
 
-func (h *ProductHandler) ListProductsByStore(c *gin.Context) {
-	storeID := c.Param("storeID")
+func (h *ProductHandler) ListProductsByMenu(c *gin.Context) {
+	menuID := c.Param("menuID")
+	var products []productModel.ProductWithAvailability
+
+	err := h.DB.Table("products").
+		Joins("JOIN menu_products ON menu_products.product_id = products.id").
+		Where("menu_products.menu_id = ?", menuID).
+		Select("products.*, menu_products.is_available"). // Seleciona os campos desejados
+		Find(&products).Error
+	if err != nil {
+		slog.Error("Erro ao buscar produtos por menu", "error", err, "menuID", menuID)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"products": products})
+}
+
+func (h *ProductHandler) ListAllProductsByUser(c *gin.Context) {
+	userID, _ := c.Get("userID")
 	var products []productModel.Product
 
-	if err := h.DB.Where("store_id = ?", storeID).Find(&products).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao buscar produtos"})
+	if err := h.DB.Where("user_id = ?", userID).Find(&products).Error; err != nil {
+		slog.Error("Erro ao buscar produtos por usuário", "error", err, "userID", userID)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
@@ -34,7 +54,8 @@ func (h *ProductHandler) GetProductByID(c *gin.Context) {
 	var product productModel.Product
 
 	if err := h.DB.First(&product, "id = ?", productID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Produto não encontrado"})
+		slog.Error("Produto não encontrado", "error", err, "id", productID)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
@@ -46,26 +67,30 @@ func (h *ProductHandler) CreateProduct(c *gin.Context) {
 	var product productModel.Product
 
 	if err := c.ShouldBindJSON(&product); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Payload inválido: " + err.Error()})
+		slog.Error("Erro ao decodificar JSON do produto", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "userID inválido"})
+		slog.Error("userID ausente ou inválido no contexto")
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
 	parsedUserID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "userID inválido"})
+		slog.Error("Erro ao converter userID para UUID", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
 	product.UserID = parsedUserID
 
 	if err := h.DB.Create(&product).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao criar produto"})
+		slog.Error("Erro ao persistir produto no banco", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
@@ -81,17 +106,20 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 	if err := h.DB.Joins("JOIN stores ON stores.id = products.store_id").
 		Where("stores.user_id = ? AND products.id = ?", userID, productID).
 		First(&product).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Produto não encontrado ou sem permissão"})
+		slog.Error("Tentativa de atualizar produto inexistente ou sem permissão", "userID", userID, "productID", productID)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
 	if err := c.ShouldBindJSON(&product); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Dados inválidos"})
+		slog.Error("Dados inválidos na atualização do produto", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
 	if err := h.DB.Save(&product).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao atualizar produto"})
+		slog.Error("Erro ao salvar produto", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
@@ -107,7 +135,8 @@ func (h *ProductHandler) DeleteProduct(c *gin.Context) {
 		Delete(&productModel.Product{})
 
 	if result.RowsAffected == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Produto não encontrado ou sem permissão"})
+		slog.Error("Tentativa de remover produto inexistente ou sem permissão", "userID", userID, "productID", productID)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 

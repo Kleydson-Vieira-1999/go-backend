@@ -14,11 +14,15 @@ type Product struct {
 	CostPrice   int       `json:"cost_price"   gorm:"not null"`
 	Price       int       `json:"price"        gorm:"not null"`
 	ImageBase64 string    `json:"image"        gorm:"type:text"`
-	IsAvailable bool      `json:"is_available" gorm:"default:true"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 func (Product) TableName() string {
 	return "products"
+}
+
+type ProductWithAvailability struct {
+	Product
+	IsAvailable bool `json:"is_available" gorm:"column:is_available"`
 }

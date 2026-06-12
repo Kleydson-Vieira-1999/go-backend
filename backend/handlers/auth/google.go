@@ -64,15 +64,15 @@ func (h *GoogleAuthHandler) PostAuthToken(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&input); err != nil {
 		slog.Warn(fmt.Sprintf("Paylod JSON inválido %v", err))
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Ocorreu um erro"})
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
 	ctx := context.Background()
 	token, err := h.config.Exchange(ctx, input.Code)
 	if err != nil {
-		slog.Warn(fmt.Sprintf("Erro ao processar credenciais do Google %v\n", err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ocorreu um erro"})
+		slog.Error("Erro ao trocar código por token Google", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
@@ -80,7 +80,7 @@ func (h *GoogleAuthHandler) PostAuthToken(c *gin.Context) {
 	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
 	if err != nil {
 		slog.Warn(fmt.Sprintf("Erro ao buscar userinfo: %v", err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ocorreu um erro"})
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 	defer resp.Body.Close()
@@ -88,7 +88,7 @@ func (h *GoogleAuthHandler) PostAuthToken(c *gin.Context) {
 	responseBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		slog.Warn(fmt.Sprintf("Erro ao ler resposta do Google: %v", err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ocorreu um erro"})
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
@@ -96,7 +96,7 @@ func (h *GoogleAuthHandler) PostAuthToken(c *gin.Context) {
 	var googleUser GoogleUser
 	if err := json.Unmarshal(responseBytes, &googleUser); err != nil {
 		slog.Warn(fmt.Sprintf("Erro ao processar dados do perfil: %v", err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ocorreu um erro"})
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
@@ -114,7 +114,7 @@ func (h *GoogleAuthHandler) PostAuthToken(c *gin.Context) {
 
 		if err := h.DB.Create(&userEstableshment).Error; err != nil {
 			slog.Warn(fmt.Sprintf("Erro ao cadastrar dados do usuario: %v", err))
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ocorreu um erro"})
+			c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 			return
 		}
 	}
@@ -125,7 +125,7 @@ func (h *GoogleAuthHandler) PostAuthToken(c *gin.Context) {
 		userEstableshment.Email)
 	if err != nil {
 		slog.Warn(fmt.Sprintf("Erro ao criar token %v", err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ocorreu um erro"})
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 

@@ -1,0 +1,14 @@
+{
+    "Servers": {
+        "1": {
+            "Name": "Restaurante DB",
+            "Group": "Servers",
+            "Host": "postgres",
+            "Port": 5432,
+            "MaintenanceDB": "restaurante_db",
+            "Username": "restaurante_user",
+            "SSLMode": "prefer",
+            "PassFile": "/tmp/pgpass"
+        }
+    }
+}

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/Kleydson-Vieira-1999/resturant-orders-backend/models/user"
@@ -27,7 +28,8 @@ func (h *UserHandler) SingIn(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Payload JSON inválido"})
+		slog.Error("Payload JSON inválido no SignIn", "error", err)
+		c.JSON(http.StatusBadRequest, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
@@ -42,7 +44,8 @@ func (h *UserHandler) SingIn(c *gin.Context) {
 		Columns:   []clause.Column{{Name: "sso_id"}},
 		DoUpdates: clause.AssignmentColumns([]string{"updated_at"}),
 	}).Create(&user).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao processar banco de dados: " + err.Error()})
+		slog.Error("Erro ao processar banco no SignIn", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
@@ -59,7 +62,8 @@ func (h *UserHandler) SingInWithJWT(c *gin.Context) {
 	h.DB.First(&user, "id = ?", userID)
 
 	if user.ID == uuid.Nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Usuário não encontrado"})
+		slog.Warn("Usuário não encontrado")
+		c.JSON(http.StatusNotFound, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 

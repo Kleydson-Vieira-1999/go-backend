@@ -1,21 +1,9 @@
 'use client';
 
 import { backendApi } from '@/services/axios';
+import { Menu, MultiMenuResp } from '@/types/menu';
 import { useParams, useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
-
-interface Menu {
-  id: string;
-  store_id: string;
-  name: string;
-  is_active: boolean;
-  updated_at: string;
-}
-
-interface MenusResponse {
-  menus?: Menu[];
-  error?: string;
-}
 
 export default function StoreMenusPage() {
   const params = useParams();
@@ -34,7 +22,7 @@ export default function StoreMenusPage() {
   const fetchMenus = async () => {
     try {
       // Busca a listagem de menus para o storeID específico
-      const response = await backendApi.get<MenusResponse>(`/action/api/menus/s/${storeID}`);
+      const response = await backendApi.get<MultiMenuResp>(`/action/api/menus/s/${storeID}`);
       setMenus(response.data.menus || []);
     } catch (error) {
       console.error('Erro ao buscar menus:', error);

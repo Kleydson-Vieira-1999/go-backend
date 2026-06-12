@@ -14,11 +14,8 @@ export interface Store {
 export interface MultiStoreResp {
   stores?: Store[];
   error?: string;
-};
+}
 
-/**
- * Interface para a resposta da API de uma única loja
- */
 export interface SingleStoreResp {
   store?: Store;
   error?: string;

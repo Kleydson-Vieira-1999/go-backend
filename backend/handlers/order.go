@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 
 	"github.com/Kleydson-Vieira-1999/resturant-orders-backend/models"
@@ -23,12 +24,14 @@ func NewOrderHandler(b *services.Broker, db *gorm.DB) *OrderHandler {
 func (h *OrderHandler) CreateOrder(c *gin.Context) {
 	var order models.Order
 	if err := c.ShouldBindJSON(&order); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Erro ao processar o JSON da requisição"})
+		slog.Error("Erro ao decodificar JSON do pedido", "error", err)
+		c.JSON(http.StatusBadRequest, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
 	if order.SessionID == uuid.Nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "session_id é obrigatório"})
+		slog.Warn("Tentativa de criar pedido sem session_id")
+		c.JSON(http.StatusBadRequest, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
@@ -38,7 +41,8 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 	order.Status = "pending"
 
 	if err := h.db.Create(&order).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao salvar pedido"})
+		slog.Error("Erro ao salvar pedido no banco", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 

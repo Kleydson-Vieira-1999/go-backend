@@ -7,10 +7,11 @@ import (
 )
 
 type MenuProduct struct {
-	MenuID    uuid.UUID       `gorm:"type:uuid;primaryKey"`
-	Menu      Menu            `gorm:"foreignKey:MenuID;constraint:OnDelete:CASCADE"`
-	ProductID uuid.UUID       `gorm:"type:uuid;primaryKey"`
-	Product   product.Product `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
+	MenuID      uuid.UUID       `gorm:"type:uuid;primaryKey"`
+	Menu        Menu            `gorm:"foreignKey:MenuID;constraint:OnDelete:CASCADE"`
+	ProductID   uuid.UUID       `gorm:"type:uuid;primaryKey"`
+	Product     product.Product `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
+	IsAvailable bool            `json:"is_available" gorm:"default:true"`
 }
 
 func (MenuProduct) TableName() string {

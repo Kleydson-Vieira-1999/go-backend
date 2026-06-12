@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"io"
+	"log/slog"
 	"net/http"
 
 	"github.com/Kleydson-Vieira-1999/resturant-orders-backend/services"
@@ -19,7 +20,8 @@ func NewSSEHandler(b *services.Broker) *SSEHandler {
 func (h *SSEHandler) StreamKitchenEvents(c *gin.Context) {
 	establishmentID := c.Query("establishment_id")
 	if establishmentID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "establishment_id é obrigatório"})
+		slog.Warn("Tentativa de abrir SSE sem establishment_id")
+		c.JSON(http.StatusBadRequest, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 

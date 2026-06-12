@@ -1,7 +1,7 @@
 package menu
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 
 	menuModel "github.com/Kleydson-Vieira-1999/resturant-orders-backend/models/menu"
@@ -26,7 +26,7 @@ func (h *MenuHandler) ListAllMenus(c *gin.Context) {
 	h.DB.Joins("JOIN stores ON stores.id = menus.store_id").
 		Where("stores.user_id = ?", userID).Find(&menus)
 
-	c.JSON(200, gin.H{"menus": menus})
+	c.JSON(http.StatusOK, gin.H{"menus": menus})
 }
 
 func (h *MenuHandler) ListAllByStoreMenus(c *gin.Context) {
@@ -35,24 +35,24 @@ func (h *MenuHandler) ListAllByStoreMenus(c *gin.Context) {
 
 	err := h.DB.Where("store_id = ?", storeID).Find(&menus).Error
 	if err != nil {
-		log.Println("error: " + err.Error())
-		c.JSON(200, gin.H{"menus": menus})
+		slog.Error("error: ", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
-	c.JSON(200, gin.H{"menus": menus})
+	c.JSON(http.StatusOK, gin.H{"menus": menus})
 }
 
 func (h *MenuHandler) GetMenuByID(c *gin.Context) {
-	userID, _ := c.Get("userID")
 	var menu menuModel.Menu
 	menuID := c.Param("id")
 
 	// Busca o menu garantindo que ele pertença a uma loja do usuário logado
-	h.DB.Joins("JOIN stores ON stores.id = menus.store_id").Where("stores.user_id = ? AND menus.id = ?", userID, menuID).First(&menu)
+	h.DB.Where("menus.id = ?", menuID).First(&menu)
 
 	if menu.ID == uuid.Nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Menu não encontrado"})
+		slog.Error("Menu não encontrado ", "menuID", menuID)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
@@ -64,15 +64,15 @@ func (h *MenuHandler) CreateMenu(c *gin.Context) {
 	var menu menuModel.Menu
 	err := c.ShouldBindJSON(&menu)
 	if err != nil {
-		log.Println("error: Paylod Invalido " + err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Payload Invalido: " + err.Error()})
+		slog.Error("Payload inválido na criação do menu", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
 	parsedUUID, parseErr := uuid.Parse(storeID)
 	if parseErr != nil {
-		log.Println("error: storeID inválido " + parseErr.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": "storeID inválido: " + parseErr.Error()})
+		slog.Error("storeID inválido no CreateMenu", "error", parseErr)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "storeID inválido: " + parseErr.Error()})
 		return
 	}
 
@@ -80,8 +80,8 @@ func (h *MenuHandler) CreateMenu(c *gin.Context) {
 
 	err = h.DB.Create(&menu).Error
 	if err != nil {
-		log.Println("error: Erro ao criar menu " + err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao criar menu: " + err.Error()})
+		slog.Error("Erro ao criar menu no banco", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
@@ -97,7 +97,8 @@ func (h *MenuHandler) UpdateMenu(c *gin.Context) {
 	if err := h.DB.Joins("JOIN stores ON stores.id = menus.store_id").
 		Where("stores.user_id = ? AND menus.id = ?", userID, menuID).
 		First(&menu).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Menu não encontrado ou sem permissão"})
+		slog.Warn("Menu não encontrado ou sem permissão")
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
@@ -107,7 +108,8 @@ func (h *MenuHandler) UpdateMenu(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Dados inválidos: " + err.Error()})
+		slog.Error("Dados inválidos", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
@@ -121,11 +123,12 @@ func (h *MenuHandler) UpdateMenu(c *gin.Context) {
 	}
 
 	if err := h.DB.Model(&menu).Updates(updates).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao atualizar menu"})
+		slog.Warn("Erro ao atualizar menu ")
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Menu atualizado com sucesso", "menu": menu})
+	c.JSON(http.StatusOK, gin.H{"menu": menu})
 }
 
 func (h *MenuHandler) DeleteMenu(c *gin.Context) {
@@ -137,7 +140,8 @@ func (h *MenuHandler) DeleteMenu(c *gin.Context) {
 		Delete(&menuModel.Menu{})
 
 	if result.RowsAffected == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Menu não encontrado ou sem permissão"})
+		slog.Warn("Tentativa de remover menu inexistente ou sem permissão", "menuID", menuID, "userID", userID)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
@@ -154,7 +158,8 @@ func (h *MenuHandler) AddProductToMenu(c *gin.Context) {
 	if err := h.DB.Joins("JOIN stores ON stores.id = menus.store_id").
 		Where("stores.user_id = ? AND menus.id = ?", userID, menuID).
 		First(&menu).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Menu não encontrado ou sem permissão"})
+		slog.Warn("Menu não encontrado ao adicionar produto", "menuID", menuID, "userID", userID)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
@@ -165,11 +170,57 @@ func (h *MenuHandler) AddProductToMenu(c *gin.Context) {
 	}
 
 	if err := h.DB.Create(&menuProduct).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao adicionar produto ao cardápio (talvez já esteja adicionado)"})
+		slog.Error("Erro ao adicionar produto ao cardápio", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Produto adicionado ao cardápio com sucesso"})
+}
+
+func (h *MenuHandler) UpdateAvailableProductInMenu(c *gin.Context) {
+	userID, _ := c.Get("userID")
+	menuID := c.Param("id")
+	productID := c.Param("productID")
+
+	// 1. Validar se o menu pertence ao usuário
+	var menu menuModel.Menu
+	if err := h.DB.Joins("JOIN stores ON stores.id = menus.store_id").
+		Where("stores.user_id = ? AND menus.id = ?", userID, menuID).
+		First(&menu).Error; err != nil {
+		slog.Warn("Menu não encontrado ao atualizar disponibilidade", "menuID", menuID, "userID", userID)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
+		return
+	}
+
+	var input struct {
+		IsAvailable bool `json:"is_available"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		slog.Error("Payload inválido no UpdateAvailableProductInMenu", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
+		return
+	}
+
+	// 2. Atualizar a disponibilidade na tabela menu_products
+	result := h.DB.Model(&menuModel.MenuProduct{}).
+		Where("menu_id = ? AND product_id = ?", menuID, productID).
+		Update("is_available", input.IsAvailable)
+
+	if result.Error != nil {
+		slog.Error("Erro ao atualizar disponibilidade do produto no cardápio", "error", result.Error)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
+		return
+	}
+
+	if result.RowsAffected == 0 {
+		slog.Warn("Associação menu-produto não encontrada", "menuID", menuID, "productID", productID)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Disponibilidade atualizada com sucesso"})
 }
 
 func (h *MenuHandler) RemoveProductFromMenu(c *gin.Context) {
@@ -182,7 +233,8 @@ func (h *MenuHandler) RemoveProductFromMenu(c *gin.Context) {
 	if err := h.DB.Joins("JOIN stores ON stores.id = menus.store_id").
 		Where("stores.user_id = ? AND menus.id = ?", userID, menuID).
 		First(&menu).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Menu não encontrado ou sem permissão"})
+		slog.Warn("Menu não encontrado ao remover produto", "menuID", menuID, "userID", userID)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
@@ -190,7 +242,8 @@ func (h *MenuHandler) RemoveProductFromMenu(c *gin.Context) {
 		Delete(&menuModel.MenuProduct{})
 
 	if result.RowsAffected == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Associação não encontrada"})
+		slog.Warn("Associação menu-produto não encontrada", "menuID", menuID, "productID", productID)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 

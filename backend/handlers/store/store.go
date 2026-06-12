@@ -1,6 +1,7 @@
 package store
 
 import (
+	"log/slog"
 	"net/http"
 
 	storeModel "github.com/Kleydson-Vieira-1999/resturant-orders-backend/models/store"
@@ -23,10 +24,10 @@ func (h *StoreHandler) ListAllStores(c *gin.Context) {
 
 	err := h.DB.Where("user_id = ?", userID).Find(&stores).Error
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao buscar lojas: " + err.Error()})
+		slog.Error("Erro ao buscar lojas do usuário", "error", err, "userID", userID)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
-	// store := storeModel.Store{}
 	c.JSON(http.StatusOK, gin.H{"stores": stores})
 }
 
@@ -39,7 +40,8 @@ func (h *StoreHandler) GetStoreByID(c *gin.Context) {
 	h.DB.Where("user_id = ? AND id = ?", userID, storeID).First(&store)
 
 	if store.ID == uuid.Nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Loja não encontrada"})
+		slog.Warn("Loja não encontrada", "storeID", storeID, "userID", userID)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
@@ -52,19 +54,22 @@ func (h *StoreHandler) CreateStore(c *gin.Context) {
 	store := storeModel.Store{}
 	err := c.ShouldBindJSON(&store)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Payload Invalido: " + err.Error()})
+		slog.Error("Payload inválido na criação da loja", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
 	uidStr, ok := userID.(string)
 	if !ok {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "userID inválido no contexto"})
+		slog.Error("userID inválido no contexto")
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
 	parsedUUID, parseErr := uuid.Parse(uidStr)
 	if parseErr != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "userID inválido: " + parseErr.Error()})
+		slog.Error("Erro ao parsear UUID do usuário", "error", parseErr)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
@@ -72,7 +77,8 @@ func (h *StoreHandler) CreateStore(c *gin.Context) {
 
 	err = h.DB.Create(&store).Error
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao criar loja: " + err.Error()})
+		slog.Error("Erro ao criar loja no banco", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
@@ -87,19 +93,22 @@ func (h *StoreHandler) UpdateStore(c *gin.Context) {
 	h.DB.Where("user_id = ? AND id = ?", userID, storeID).First(&store)
 
 	if store.ID == uuid.Nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Loja não encontrada"})
+		slog.Warn("Tentativa de atualizar loja inexistente", "storeID", storeID, "userID", userID)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
 	err := c.ShouldBindJSON(&store)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Payload Invalido: " + err.Error()})
+		slog.Error("Payload inválido na atualização da loja", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 
 	err = h.DB.Save(&store).Error
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Erro ao criar loja: " + err.Error()})
+		slog.Error("Erro ao atualizar loja", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"erro": "Ocorreu um erro"})
 		return
 	}
 

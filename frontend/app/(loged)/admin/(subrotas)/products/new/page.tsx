@@ -1,12 +1,10 @@
 'use client';
 
 import { backendApi } from '@/services/axios';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 
 export default function NewProductPage() {
-  const params = useParams();
-  const storeID = params.id;
   const router = useRouter();
   
   const [isSaving, setIsSaving] = useState(false);
@@ -16,7 +14,6 @@ export default function NewProductPage() {
     cost_price: '',
     price: '',
     image: '',
-    is_available: true,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -26,14 +23,13 @@ export default function NewProductPage() {
     try {
       // Envia os dados para criar o produto no endpoint especificado vinculado à loja
       // Os campos numéricos são convertidos explicitamente antes do envio
-      await backendApi.post(`/action/api/products/s/${storeID}`, {
+      await backendApi.post(`/action/api/products`, {
         ...formData,
         cost_price: Number(formData.cost_price),
         price: Number(formData.price),
       });
-
       alert('Produto criado com sucesso!');
-      router.push(`/admin/stores/view/${storeID}`); 
+      router.push('/admin/products');
     } catch (error) {
       console.error('Erro ao criar produto:', error);
       alert('Falha ao criar o produto. Verifique se os campos estão corretos.');
@@ -96,12 +92,6 @@ export default function NewProductPage() {
               <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">URL da Imagem</label>
               <input name="image" value={formData.image} onChange={handleChange} className="w-full px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-transparent outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" placeholder="https://..." />
             </div>
-
-            <div className="flex items-center gap-3 h-full">
-              <input type="checkbox" id="is_available" name="is_available" checked={formData.is_available} onChange={handleChange} className="w-4 h-4 rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500" />
-              <label htmlFor="is_available" className="text-sm font-medium cursor-pointer">Disponível para venda</label>
-            </div>
-
           </div>
 
           <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-end gap-4">

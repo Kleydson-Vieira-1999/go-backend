@@ -29,8 +29,12 @@ func Setup(db *gorm.DB, loggerJson *slog.Logger) *gin.Engine {
 
 	r := gin.New()
 
-	r.Use(sloggin.New(loggerJson))
-	r.Use(gin.Recovery())
+	r.Use(sloggin.NewWithConfig(loggerJson, sloggin.Config{
+		WithRequestHeader: true,
+		WithRequestBody: true,
+		WithResponseHeader: true,
+		WithResponseBody: true,
+	}))
 
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
@@ -66,13 +70,16 @@ func Setup(db *gorm.DB, loggerJson *slog.Logger) *gin.Engine {
 		protected.GET("/menus/:id", menuHandler.GetMenuByID)
 		protected.GET("/menus/s/:storeID", menuHandler.ListAllByStoreMenus)
 		protected.POST("/menus/:storeID", menuHandler.CreateMenu)
-		protected.POST("/menus/p/:id/*productID", menuHandler.AddProductToMenu)
-		protected.DELETE("/menus/p/:id/*productID", menuHandler.RemoveProductFromMenu)
+		protected.PATCH("/menus/:storeID", menuHandler.UpdateMenu)
+		protected.POST("/menus/p/:id/:productID", menuHandler.AddProductToMenu)
+		protected.PATCH("/menus/p/:id/:productID", menuHandler.UpdateAvailableProductInMenu)
+		protected.DELETE("/menus/p/:id/:productID", menuHandler.RemoveProductFromMenu)
 
 		productHandler := product.NewProductHandler(db)
-		protected.GET("/products/s/:storeID", productHandler.ListProductsByStore)
+		protected.GET("/products/m/:menuID", productHandler.ListProductsByMenu)
 		protected.GET("/products/:id", productHandler.GetProductByID)
-		protected.POST("/products/s/:storeID", productHandler.CreateProduct)
+		protected.GET("/products", productHandler.ListAllProductsByUser)
+		protected.POST("/products", productHandler.CreateProduct)
 		protected.PATCH("/products/:id", productHandler.UpdateProduct)
 		protected.DELETE("/products/:id", productHandler.DeleteProduct)
 	}

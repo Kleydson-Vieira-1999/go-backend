@@ -1,5 +1,6 @@
 'use client'
 
+import { CreateModal } from "@/components/CreateModal"
 import { backendApi } from "@/services/axios"
 import { Menu, MultiMenuResp } from "@/types/menu"
 import { useRouter } from 'next/navigation'
@@ -48,7 +49,7 @@ export default function MenusAdminPage() {
                     onClick={() => router.push(`/admin/menus/view/${menu.id}`)}
                     className="text-xs font-medium text-emerald-600 hover:text-emerald-700 transition-colors"
                   >
-                    Configurações da Unidade →
+                    Configurações do menu →
                   </button>
                 </div>
               </div>
@@ -58,23 +59,13 @@ export default function MenusAdminPage() {
 
 
         {/* Modal limpo */}
-        {isModalOpen && (
-          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-            <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl border border-zinc-200 dark:border-zinc-800 max-w-md w-full shadow-xl">
-              <h3 className="font-bold text-lg mb-2">Cadastrar Novo Cardapio</h3>
-              <p className="text-sm text-zinc-500 mb-6">Insira os dados iniciais da nova filial.</p>
-              <div className="flex justify-end gap-3 border-t border-zinc-200 dark:border-zinc-800 pt-4">
-                <button onClick={() => setIsModalOpen(false)} className="text-sm font-medium text-zinc-500 hover:text-zinc-700">Cancelar</button>
-                <button
-                  onClick={() => router.push('/admin/menus/new')}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm"
-                >
-                  Ir para Formulário
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <CreateModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          title="Cadastrar Novo Cardapio"
+          description="Insira os dados iniciais do novo cardapio."
+          confirmUrl="/admin/menus/new"
+        />
       </div>
     </>
   )

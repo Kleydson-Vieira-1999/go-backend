@@ -23,8 +23,26 @@
           rabbitmq-c # Bibliotecas C para rabbitmq se precisar
           # se quiser ferramentas extras como elasticdump, pode por aqui
         ];
+        
+        hardeningDisable = [ "fortify" ];
 
         shellHook = ''
+          mkdir -p .node_modules_global/bin
+          mkdir -p .node_modules_global/cache
+
+          export NPM_CONFIG_PREFIX=$PWD/.node_modules_global
+          export PATH=$PWD/.node_modules_global/bin:$PATH
+          
+          export NPM_CONFIG_CACHE=$PWD/.node_modules_global/cache
+
+          mkdir -p .go/path/bin
+          mkdir -p .go/cache
+
+          export GOPATH=$PWD/.go/path
+          export GOCACHE=$PWD/.go/cache
+
+          export PATH=$GOPATH/bin:$PATH
+
           echo "✦ Ambiente de Infraestrutura Pronto ✦"
   
           testar-prod() {
