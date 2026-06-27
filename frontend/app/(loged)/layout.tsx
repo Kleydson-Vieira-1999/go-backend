@@ -2,8 +2,8 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Sidebar from '@/components/sidebar/page'
-import Header from '@/components/header/page'
+import Sidebar from '@/components/layout/sidebar'
+import Header from '@/components/layout/header'
 import { useAppDispatch, useAppSelector } from '@/lib/hooks'
 import { loginUser } from '@/lib/features/user/userSlice'
 import { backendApi } from '@/services/axios'

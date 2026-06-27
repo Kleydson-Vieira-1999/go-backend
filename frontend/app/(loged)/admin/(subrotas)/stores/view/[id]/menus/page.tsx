@@ -124,7 +124,9 @@ export default function StoreMenusPage() {
               </div>
 
               <div className="mt-6 pt-4 border-t border-zinc-50 dark:border-zinc-800 flex items-center justify-end gap-3">
-                <button className="text-xs font-bold text-emerald-600 hover:text-emerald-700 uppercase tracking-wider">Configurar Itens</button>
+                <button
+                  onClick={() => router.push(`/admin/menus/view/${menu.id}`)}
+                  className="text-xs font-bold text-emerald-600 hover:text-emerald-700 uppercase tracking-wider">Configurar Itens</button>
               </div>
             </div>
           ))}

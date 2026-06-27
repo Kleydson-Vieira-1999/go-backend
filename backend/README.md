@@ -43,11 +43,17 @@ Com o shell do Nix ativo, utilize os aliases configurados:
 ### 3. Rodar a aplicação
 Certifique-se de que o banco de dados está ligado, instale as dependências e execute:
 ```bash
-cd src/
+cd backend/
 go mod tidy
 go run main.go
 ```
 O servidor iniciará em `http://localhost:8080`.
+
+## 📦 Estrutura do Backend
+O backend utiliza uma arquitetura modular simplificada em `modules/`:
+- **Estrutura Achatada (Flat)**: Cada módulo (exceto `core`) coloca seus arquivos de rotas (`router.go`), controladores/handlers (`create.go`, `select.go`, etc.) e setups de migração (`setup.go`) diretamente na raiz do diretório do módulo. Todos compartilham o pacote do módulo (ex: `package menu`).
+- **Modelos Unificados**: As structs de dados GORM de cada módulo são declaradas em um subpacote e arquivo único: `model/model.go` sob o pacote `package model` (ex: `modules/menu/model/model.go`).
+- **Módulo Compartilhado (Core)**: O módulo `core` fornece funcionalidades compartilhadas como roteador principal, conexão com o banco e inicialização do servidor.
 
 ## 📌 Endpoints Principais
 

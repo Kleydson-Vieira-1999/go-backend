@@ -39,7 +39,4 @@ EXPOSE 8080
 
 ENV JWT_PASS=
 
-# Variável de ambiente padrão para o Gin rodar em modo de alta performance
-ENV GIN_MODE=release
-
 CMD ["./main"]
