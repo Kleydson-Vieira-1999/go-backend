@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func ListAllMenus(c *gin.Context) {
+func ListAllMenusByUser(c *gin.Context) {
 	userID, _ := c.Get("userID")
 	var menus []Menu
 

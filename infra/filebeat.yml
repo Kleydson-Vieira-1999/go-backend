@@ -21,11 +21,11 @@ filebeat.inputs:
     # A aplicação backend também gera JSON, então o JSON da aplicação estará dentro do campo 'message'
     # (que é o conteúdo do campo 'log' do driver) após o processamento inicial do Filebeat.
     processors:
-      - drop_event:
-          when:
-            not:
-              regexp:
-                log.file.path: ".*6800d16ed48f*."
+      # - drop_event:
+      #     when:
+      #       not:
+      #         regexp:
+      #           log.file.path: ".*6800d16ed48f*."
       # 2. O Dissect vai fatiar a string do Podman baseada nos espaços
       - dissect:
           tokenizer: "%{podman_timestamp} %{stream} %{log_flavor} %{json_payload}"

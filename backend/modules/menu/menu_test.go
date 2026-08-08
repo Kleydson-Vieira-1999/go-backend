@@ -79,7 +79,7 @@ func setupRouter(userID uuid.UUID) *gin.Engine {
 	})
 
 	// Use distinct path patterns to avoid wildcard parameter naming conflicts in Gin router
-	r.GET("/menus/list/all", ListAllMenus)
+	r.GET("/menus/list/all", ListAllMenusByUser)
 	r.GET("/stores/:storeID/menus", ListAllByStoreMenus)
 	r.GET("/menus/get/:menuID", GetMenuByID)
 	r.POST("/stores/:storeID/menus", CreateMenu)

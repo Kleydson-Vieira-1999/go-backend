@@ -53,8 +53,8 @@ export default function ProductViewPage() {
   return (
     <div className="p-8 max-w-4xl">
       <div className="flex flex-col gap-4 mb-10">
-        <button 
-          onClick={() => router.back()} 
+        <button
+          onClick={() => router.back()}
           className="text-sm font-medium text-zinc-500 hover:text-emerald-600 transition-colors w-fit flex items-center gap-2 group"
         >
           <svg className="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -62,11 +62,11 @@ export default function ProductViewPage() {
           </svg>
           Voltar
         </button>
-        
+
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-3xl font-bold tracking-tight">Detalhes do Produto</h2>
-            <p className="text-zinc-500">Informações completas do item no catálogo.</p>
+            <p className="text-zinc-500">Informações completas do item.</p>
           </div>
         </div>
       </div>
@@ -118,8 +118,8 @@ export default function ProductViewPage() {
                 </p>
               </div>
             </div>
-            
-            
+
+
           </section>
         </div>
       </div>

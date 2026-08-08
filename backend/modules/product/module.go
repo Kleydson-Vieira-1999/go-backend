@@ -10,4 +10,5 @@ var DB *gorm.DB
 func InitModule(routing *core.Routing, database *core.Database) {
 	DB = database.DB
 	database.Migrator.Register(RunMigrations)
+	SetupRoutes(routing.Router)
 }

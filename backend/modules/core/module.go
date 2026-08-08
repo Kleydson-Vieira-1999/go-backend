@@ -23,10 +23,8 @@ type Database struct {
 var routing *Routing
 var database *Database
 
-var loggerJson *slog.Logger
-
 func InitModule() (*Routing, *Database) {
-	loggerJson = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	loggerJson := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(loggerJson)
 
 	if err := godotenv.Load(); err != nil {
@@ -35,7 +33,7 @@ func InitModule() (*Routing, *Database) {
 
 	db := Connect()
 
-	routing = &Routing{Router: gin.New(), StandardResponse: NewResponse()};
+	routing = &Routing{Router: Setup(loggerJson), StandardResponse: NewResponse()};
 	database = &Database{DB: db, Migrator: &Migrator{}}
 
 	return routing, database
@@ -49,8 +47,6 @@ func StartApplication() {
 
 	sqlDB, _ := database.DB.DB()
 	defer sqlDB.Close()
-
-	routing.Router = Setup(loggerJson)
 
 	slog.Info("Servidor iniciado em http://localhost:8080")
 	routing.Router.Run(":8080")
